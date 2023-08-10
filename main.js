@@ -1,31 +1,51 @@
-// let rows = 40;
-// let cols = 20;
-let cellSize = 10; // размер клетки
-
+let cellSize = 10;
 const area = document.querySelector('.game');
 const canvas = document.querySelector('.game__area');
-canvas.width = area.offsetWidth;
+canvas.width = area.offsetHeight;
 canvas.height = area.offsetHeight;
-let cols = Math.round(area.offsetWidth / cellSize);
+let cols = Math.round(area.offsetHeight / cellSize);
 let rows = Math.round(area.offsetHeight / cellSize);
+let gridChanged = false;
 
-// console.log(cols, rows)
-
-
-// define field for game
-const grid = [];
+// defining default field for game
+let grid = [];
 for (let y = 0; y < cols; y++) {
   grid[y] = [];
   for (let x = 0; x < rows; x++) {
     grid[y][x] = false;
-    // draw(y,x, 'yellow')
   }
 };
 
-let playing = false;
-console.log(playing)
+// defining new scale of filed
+function handleSubmit() {
+  grid=[];
+  const sizeOfFiled = document.querySelector('input').value;
+  let prevCols = cols;
+  cols = sizeOfFiled;
+  rows = sizeOfFiled;
+  if (cols < prevCols) {
+    cellSize = Math.round(area.offsetHeight / cols);
+    // cols = Math.round(area.offsetHeight / cellSize);
+    // rows = Math.round(area.offsetHeight / cellSize);
+  }
+   else if (cols > prevCols) {
+    cellSize = Math.round(area.offsetHeight / cols);
+    // cols = Math.round(area.offsetHeight / cellSize);
+    // rows = Math.round(area.offsetHeight / cellSize);
+  }
+  for (let y = 0; y < cols; y++) {
+    grid[y] = [];
+    for (let x = 0; x < rows; x++) {
+      grid[y][x] = false;
+    }
+  };
+  drawField(grid);
+  // console.log(grid);
+};
 
-// define neighbors and make torus
+let playing = false;
+
+// defining neighbors and make torus
 const getNeighbors = (x, y, grid) => {
   let prevX = x - 1;
   if (prevX < 0) {
@@ -81,7 +101,7 @@ const drawField = grid => {
   const context = canvas.getContext('2d');
   for (let x = 0; x < cols; x++) {
     for (let y = 0; y < rows; y++) {
-      if (grid[y][x]) {
+      if (grid.length !== 0 && grid[y][x]) {
         context.fillStyle = 'red'
         context.fillRect(x * cellSize, y * cellSize, cellSize, cellSize)
       } else {
@@ -90,87 +110,63 @@ const drawField = grid => {
       }
     }
   }
+  //  console.log(grid);
 };
 
 let nextGrid = grid;
-
 drawField(grid);
 
 const step = () => {
   nextGrid = nextGrid.map((row, y) => row.map((_, x) => {
-    return getDeadOrAlive(x, y, nextGrid);
+    currentState = grid[y][x];
+    let nextState = getDeadOrAlive(x, y, nextGrid);
+    // console.log('nexState '+nextState + ' currentState '+ currentState);
+    if (nextState !== currentState){
+      gridChanged = true;
+    }
+    return nextState;
   }))
-  drawField(nextGrid)
-};
-
-let interval = null
-
-const setupControlButtons = () => {
-  //button to start 
-  let startButton = document.getElementById("start");
-  // startButton.onclick = startButtonHandler;
-  startButton.addEventListener("click", startButtonHandler);
-
-  //button to clear selection
-  let clearButtton = document.getElementById("clear");
-  // clearButtton.onclick = clearButttonHandler;
-  clearButtton.addEventListener("click", clearButttonHandler);
-
-  let randomButton = document.getElementById("random");
-  // randomButton.onclick = randomButttonHandler;
-  randomButton.addEventListener('click', randomButttonHandler);
-};
-
-const startButtonHandler = (e) => {
-  if (playing) {
-    console.log("Pause the game");
-    playing = false;
-    console.log(playing)
-    // this.innerHTML = "continue";
-    // e.target.innerHTML = 'continue';
-    // clearTimeout(timer);
-    clearInterval(interval);
+  if (gridChanged){
+    drawField(nextGrid);
+    gridChanged = false;
   } else {
-    console.log("continue the game");
-    playing = true
-    
-    // this.innerHTML = "pause";
-    // e.target.innerHTML = "pause";
-    interval = setInterval(step, 80);
-    // play();
+    console.log('игра остановилася');
+    // clearInterval(interval)
+    clearInterval(interval);
+    playing=false;
   }
+  
+
+  grid = nextGrid;
 };
 
+let interval = null;
+let timerInterval = null;
 
-document.getElementById('glider').addEventListener('click', () => {
-  nextGrid = grid
-})
-
-
+// button to show next step
 document.getElementById('step').addEventListener('click', step);
 
-
-document.getElementById('start').addEventListener('click', () => {
+// button to play game
+document.getElementById('play').addEventListener('click', () => {
   if (!playing) {
     interval = setInterval(step, 80);
     playing = true;
-    console.log(playing)
   }
 });
 
+// button to pause game
+document.getElementById('pause').addEventListener('click', () => {
+  playing = false;
+  clearInterval(interval);
+});
 
-// if (playing === true) {
-  document.getElementById('stop').addEventListener('click', () => {
-    clearInterval(interval);
-    playing = false;
-    console.log(playing)
-  });
-// };
-
-
-
-
-document.getElementById('reset').addEventListener('click', () => {
+// button to clear field
+  document.getElementById('clear').addEventListener('click', () => {  
+  playing = false;
+  clearInterval(interval);
+  clearInterval(timerInterval);
+  document.getElementById("timer").innerHTML = '';
+    
   for (let y = 0; y < rows; y++) {
     for (let x = 0; x < cols; x++) {
       grid[y][x] = false;
@@ -180,47 +176,43 @@ document.getElementById('reset').addEventListener('click', () => {
   nextGrid = grid;
 
   drawField(grid);
-})
+});
 
-document.querySelector('#glider').addEventListener('click', () => {
-  for (let y = 0; y < 100; y++) {
-    for (let x = 0; x < 100; x++) {
-      grid[y][x] = false
-    }
-  }
-
-  grid[20][20] = true
-  grid[20][21] = true
-  grid[20][22] = true
-  grid[19][22] = true
-  grid[18][21] = true
-
-  nextGrid = grid
-
-  drawField(grid)
-})
-
+// button to make random field
 document.getElementById('random').addEventListener('click', () => {
-  for (let y = 0; y < rows; y++) {
-    for (let x = 0; x < cols; x++) {
-      grid[y][x] = Math.random() * 100 > 65
+  const todayInMilliseconds = Date.now();
+  function timerRun () {
+    const seconds = 'timer: ' + Math.floor((Date.now() - todayInMilliseconds) / 1000);
+    document.getElementById("timer").innerHTML = seconds;
+  };
+    clearInterval(timerInterval);
+    timerInterval = setInterval(timerRun, 1000);
+     
+  for (let y = 0; y < cols; y++) {
+    for (let x = 0; x < rows; x++) {
+      grid[y][x] = Math.random() * 100 > 65;
     }
   }
-
-  nextGrid = grid
-
-  drawField(grid)
+  
+  nextGrid = grid;
+  drawField(grid);
 })
 
-document.querySelector('.game__area').addEventListener('click', event => {
+// button to draw one cell with mouse
+document.querySelector('.game__area').addEventListener('click', (event) => {
   const x = Math.floor(event.offsetX / cellSize)
   const y = Math.floor(event.offsetY / cellSize)
-  // let x = Math.floor((e.pageX - e.currentTarget.offsetLeft) / cellSize);
-  // let y = Math.floor((e.pageY - e.currentTarget.offsetTop) / cellSize);
-
   grid[y][x] = !grid[y][x]
-
+   
+  // if (canvas.getContext) {
+  //   const ctx = canvas.getContext("2d");
+  //   ctx.fillStyle = 'red';
+  //   ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+  // }
+  drawField(grid);
   nextGrid = grid
+});
 
-  drawField(grid)
-})
+// if (grid === nextGrid) {
+  
+// }

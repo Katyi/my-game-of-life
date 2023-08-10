@@ -5,21 +5,22 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Game of Life</title>
-  <!-- <link rel="stylesheet" href="style.css"> -->
   <link rel="stylesheet" href="index.css">
 </head>
 <body>
-  <!-- <div id="gridContainer"></div> -->
+  <div class="title">Conway's game of life on torus</div>
   <main class="game">
     <canvas class="game__area"></canvas>
   </main>
-    <div class="control">
-      <button id="start">start</button>
+    <div class="buttons__area">
+      <label>Size of field:</label>
+      <input type="number" placeholder="Enter number" onchange="handleSubmit()"/>
+      <button id="play">play</button>
       <button id="step">step</button>
-      <button id="stop">stop</button>
-      <button id="reset">reset</button>
-      <button id="glider">glider</button>
+      <button id="pause">pause</button>
+      <button id="clear">clear</button>
       <button id="random">random</button>
+      <div id="timer" class="timer"></div>
     </div>
   <script src="main.js"></script>
 </body>
