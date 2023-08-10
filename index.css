@@ -17,7 +17,6 @@ body {
   flex-grow: 1;
   overflow: hidden;
   background: teal;
-  padding: 10px;
 }
 canvas {
   overflow: hidden;

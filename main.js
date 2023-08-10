@@ -1,137 +1,109 @@
-let rows = 40;
-let cols = 20;
-let cellSize = 20;
-let isPlay = false;
+// let rows = 40;
+// let cols = 20;
+let cellSize = 10; // размер клетки
 
 const area = document.querySelector('.game');
 const canvas = document.querySelector('.game__area');
-
 canvas.width = area.offsetWidth;
 canvas.height = area.offsetHeight;
+let cols = Math.round(area.offsetWidth / cellSize);
+let rows = Math.round(area.offsetHeight / cellSize);
 
-let x = Math.round(area.offsetWidth / cellSize);
-let y = Math.round(area.offsetHeight / cellSize);
+// console.log(cols, rows)
 
-console.log(x ,y)
 
-let grid = new Array(x);
-let nextGrid = new Array(x);
+// define field for game
+const grid = [];
+for (let y = 0; y < cols; y++) {
+  grid[y] = [];
+  for (let x = 0; x < rows; x++) {
+    grid[y][x] = false;
+    // draw(y,x, 'yellow')
+  }
+};
 
 let playing = false;
+console.log(playing)
 
-let timer;
-let reproductionTime = 100;
-
-/* inicialize game */
-const initialize = () => {
-  // createTable();
-  initializeGrids();
-  resetGrids();
-  setupControlButtons();
-  canvas.addEventListener('click', cellClickHandler);
-};
-
-const initializeGrids = () => {
-  for (let i = 0; i < x; i++) {
-    grid[i] = new Array(y);
-    nextGrid[i] = new Array(y);
+// define neighbors and make torus
+const getNeighbors = (x, y, grid) => {
+  let prevX = x - 1;
+  if (prevX < 0) {
+    prevX = grid[0].length - 1;
   }
+
+  let nextX = x + 1;
+  if (nextX === grid[0].length) {
+    nextX = 0;
+  }
+
+  let prevY = y - 1;
+  if (prevY < 0) {
+    prevY = grid.length - 1;
+  }
+
+  let nextY = y + 1
+  if (nextY === grid.length) {
+    nextY = 0;
+  }
+
+  return [
+    grid[prevY][prevX],
+    grid[prevY][x],
+    grid[prevY][nextX],
+    grid[y][prevX],
+    grid[y][nextX],
+    grid[nextY][prevX],
+    grid[nextY][x],
+    grid[nextY][nextX],
+  ]
 };
 
+// cheking rules of game
+const getDeadOrAlive = (x, y, grid) => {
+  const neighbors = getNeighbors(x, y, grid);
+  const numberOfAliveNeighbors = neighbors.filter(Boolean).length;
 
-
-const randomGrids = () => {
-  for (let i = 0; i < x; i++) {
-    for (let j = 0; j < y; j++) {
-      // grid[i][j] =  Math.floor(Math.random() * 2);
-      grid[i][j] =  (Math.random() / Math.random()) > 0.3 ? 0 : 1;
-      // console.log(grid)
+  if (grid[y][x]) {
+    if (numberOfAliveNeighbors < 2 || numberOfAliveNeighbors > 3) {
+      return false
     }
+    return true
   }
-  console.log(grid)
-  console.log(x)
-  console.log(y)
-};
 
-const resetGrids = () => {
-  for (let i = 0; i < x; i++) {
-    for (let j = 0; j < y; j++) {
-      grid[i][j] = 0;
-      nextGrid[i][j] = 0;
-    }
+  if (numberOfAliveNeighbors === 3) {
+    return true
   }
-  // console.log(grid)
-  // console.log(nextGrid)
+  return false
 };
 
-const copyAndResetGrid = () => {
-  for (let i = 0; i < x; i++) {
-    for (let j = 0; j < y; j++) {
-      grid[i][j] = nextGrid[i][j];
-      nextGrid[i][j]=0;
-    }
-  }
-};
-
-/* lay out your board */
-const createTable = () => {
-  // let gridContainer = document.getElementById("gridContainer");
-  // if (!gridContainer) {
-  //   console.error("Problem: no div for the grid table!");
-  // }
-
-  
-  let table = document.createElement("table");
-
-  for (let i = 0; i < rows; i++) {
-    let tr = document.createElement("tr");
-    for (let j = 0; j < cols; j++) {
-      let cell = document.createElement("td");
-      cell.style.width =`${x}px`;
-      cell.style.height =`${y}px`;
-
-      // cell.setAttribute("style.height", y);
-      // cell.setAttribute("style.width", x);
-      cell.setAttribute("id", i + "_" + j);
-      cell.setAttribute("class", "dead");
-      cell.addEventListener("click", cellClickHandler);
-      tr.appendChild(cell);
-    }
-    table.appendChild(tr);
-  }
-  // gridContainer.appendChild(table);
-  
-};
-/* drow with mouse */
-const draw = (x, y, color) => {
-  if (canvas.getContext) {
-    const ctx = canvas.getContext("2d");
-    ctx.fillStyle = `${color}`;
-    ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
-  }
-};
-
-const cellClickHandler = (e) => {
-  let x = Math.floor((e.pageX - e.currentTarget.offsetLeft) / cellSize);
-  let y = Math.floor((e.pageY - e.currentTarget.offsetTop) / cellSize);
-  console.log(x)
-  console.log(y)
-  // this.stop();
-  // e.area[y][x] = !e.area[y][x];
-  draw(x, y, "red");
-};
-
-const updateView = () => {
-  for (let i = 0; i < x; i++) {
-    for (let j = 0; j < y; j++) {
-      if (grid[i][j] ===  1) {
-        draw(i, j, 'red');
+const drawField = grid => {
+  const context = canvas.getContext('2d');
+  for (let x = 0; x < cols; x++) {
+    for (let y = 0; y < rows; y++) {
+      if (grid[y][x]) {
+        context.fillStyle = 'red'
+        context.fillRect(x * cellSize, y * cellSize, cellSize, cellSize)
       } else {
-        draw(i, j, "teal");
+        context.fillStyle = 'teal'
+        context.fillRect(x * cellSize, y * cellSize, cellSize, cellSize)
       }
     }
   }
 };
+
+let nextGrid = grid;
+
+drawField(grid);
+
+const step = () => {
+  nextGrid = nextGrid.map((row, y) => row.map((_, x) => {
+    return getDeadOrAlive(x, y, nextGrid);
+  }))
+  drawField(nextGrid)
+};
+
+let interval = null
 
 const setupControlButtons = () => {
   //button to start 
@@ -149,115 +121,106 @@ const setupControlButtons = () => {
   randomButton.addEventListener('click', randomButttonHandler);
 };
 
-const randomButttonHandler = () => {
-  console.log("random game");
-  randomGrids();
-  updateView();
-};
-
 const startButtonHandler = (e) => {
   if (playing) {
     console.log("Pause the game");
     playing = false;
+    console.log(playing)
     // this.innerHTML = "continue";
-    e.target.innerHTML = 'continue';
-    clearTimeout(timer);
+    // e.target.innerHTML = 'continue';
+    // clearTimeout(timer);
+    clearInterval(interval);
   } else {
     console.log("continue the game");
     playing = true
-    // this.innerHTML = "pause";
-    e.target.innerHTML = "pause";
-    play();
-  }
-};
-
-const clearButttonHandler = () => {
-  console.log("Clear the game: stop playing, clear the grid");
-  playing = false;
-  let startButton = document.getElementById("start");
-  startButton.innerHTML = "start";
-
-  clearTimeout(timer);
-  for (let i = 0; i < x; i++) {
-    for (let j = 0; j < y; j++) {
-      draw(i,j,'teal');
-    }
     
-  }
-  resetGrids();
-};
-
-const play = () => {
-  console.log("Play the game");
-  computeNextGen();
-
-  if (playing) {
-    timer = setTimeout(play, reproductionTime);
+    // this.innerHTML = "pause";
+    // e.target.innerHTML = "pause";
+    interval = setInterval(step, 80);
+    // play();
   }
 };
 
 
-/* run next life game */
-const computeNextGen = () => {
-  for (let i = 0; i < x; i++) {
-    for (let j = 0; j < y; j++){
-      applyRules(i,j);
-      console.log(i,j)
+document.getElementById('glider').addEventListener('click', () => {
+  nextGrid = grid
+})
+
+
+document.getElementById('step').addEventListener('click', step);
+
+
+document.getElementById('start').addEventListener('click', () => {
+  if (!playing) {
+    interval = setInterval(step, 80);
+    playing = true;
+    console.log(playing)
+  }
+});
+
+
+// if (playing === true) {
+  document.getElementById('stop').addEventListener('click', () => {
+    clearInterval(interval);
+    playing = false;
+    console.log(playing)
+  });
+// };
+
+
+
+
+document.getElementById('reset').addEventListener('click', () => {
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      grid[y][x] = false;
     }
   }
-  //copy nextGrid to grid, and reset nextGrid
-  copyAndResetGrid();
-  //copy all 1 value to "live" in the table
-  updateView();
-};
 
-/* cheking rules of game */
-const applyRules = (row, col) => {
-  let numNeighbors = countNeighbors(row, col);
-  if (grid[row][col] == 1) {
-    if (numNeighbors < 2) {
-      nextGrid[row][col] = 0;
-    } else if (numNeighbors == 2 || numNeighbors == 3) {
-      nextGrid[row][col] = 1;
-    } else if (numNeighbors > 3) {
-      nextGrid[row][col] = 0;
-    }
-  } else if (grid[row][col] == 0) {
-    if (numNeighbors == 3) {
-      nextGrid[row][col] = 1;
+  nextGrid = grid;
+
+  drawField(grid);
+})
+
+document.querySelector('#glider').addEventListener('click', () => {
+  for (let y = 0; y < 100; y++) {
+    for (let x = 0; x < 100; x++) {
+      grid[y][x] = false
     }
   }
-};
 
-const countNeighbors = (row, col) => {
-  let count = 0;
-  if (row-1>=0) {
-    if (grid[row-1][col] == 1) count++;
-  }
-  if (row-1 >=0 && col-1 >=0) {
-    if (grid[row-1][col-1] == 1) count++;
-  }
-  if (row-1 >=0 && col+1 < cols) {
-    if(grid[row-1][col+1] == 1) count++;
-  }
-  if (col-1>=0) {
-    if (grid[row][col-1] == 1) count++;
-  }
-  if (col+1 < cols) {
-    if (grid[row][col+1] == 1) count++;
-  }
-  if (row+1 < rows) {
-    if (grid[row+1][col] == 1) count++;
-  }
-  if (row+1 < rows && col-1>=0) {
-    if (grid[row+1][col-1] == 1) count++;
-  }
-  if (row+1 < rows && col+1<cols) {
-    if (grid[row+1][col+1]==1) count++;
-  }
-  console.log(count)
-  return count;
-}
+  grid[20][20] = true
+  grid[20][21] = true
+  grid[20][22] = true
+  grid[19][22] = true
+  grid[18][21] = true
 
-/* let's start game */
-window.onload = initialize;
+  nextGrid = grid
+
+  drawField(grid)
+})
+
+document.getElementById('random').addEventListener('click', () => {
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      grid[y][x] = Math.random() * 100 > 65
+    }
+  }
+
+  nextGrid = grid
+
+  drawField(grid)
+})
+
+document.querySelector('.game__area').addEventListener('click', event => {
+  const x = Math.floor(event.offsetX / cellSize)
+  const y = Math.floor(event.offsetY / cellSize)
+  // let x = Math.floor((e.pageX - e.currentTarget.offsetLeft) / cellSize);
+  // let y = Math.floor((e.pageY - e.currentTarget.offsetTop) / cellSize);
+
+  grid[y][x] = !grid[y][x]
+
+  nextGrid = grid
+
+  drawField(grid)
+})
