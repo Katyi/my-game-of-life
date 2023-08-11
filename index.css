@@ -14,13 +14,25 @@ body {
   padding-top: 10px;
   padding-bottom: 10px;
 }
-.title {
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 200px;
+  align-items: center;
+  height: 24px;
   font-size: 24px;
   line-height: 24px;
   font-weight: 700;
   font-style: normal;
-  text-align: center;
+}
+.title{
   color: white;
+}
+.messages {
+  font-size: 36px;
+  color: white;
+  line-height: 36px;
+  z-index: 2;
 }
 .game {
   flex-grow: 1;
@@ -78,23 +90,31 @@ input::placeholder {
   text-align: end;
 }
 
-
-
 @media (min-width:320px)  { 
 /* smartphones, portrait iPhone, portrait 480x320 phones (Android) */
-  table, p, img {
-  padding-right: 1em;
-  width: 100%;
+  .game {
+    margin-left: 10px;
+    margin-right: 10px;
+  }
+  .buttons__area {
+    flex-wrap: wrap;
   }
 }
 @media (min-width:480px)  { 
-/* smartphones, Android phones, landscape iPhone */ 
+/* smartphones, Android phones, landscape iPhone */
 }
 @media (min-width:600px)  { 
 /* portrait tablets, portrait iPad, e-readers (Nook/Kindle), landscape 800x480 phones (Android) */ 
 }
 @media (min-width:801px)  { 
 /* tablet, landscape iPad, lo-res laptops ands desktops */ 
+  .game {
+    margin-left: 0px;
+    margin-right: 0px;
+  }
+  .buttons__area {
+    flex-wrap: nowrap;
+  }
 }
 @media (min-width:1025px) { 
 /* big landscape tablets, laptops, and desktops */ 

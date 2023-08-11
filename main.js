@@ -23,24 +23,22 @@ function handleSubmit() {
   let prevCols = cols;
   cols = sizeOfFiled;
   rows = sizeOfFiled;
+
   if (cols < prevCols) {
     cellSize = Math.round(area.offsetHeight / cols);
-    // cols = Math.round(area.offsetHeight / cellSize);
-    // rows = Math.round(area.offsetHeight / cellSize);
-  }
-   else if (cols > prevCols) {
+  } else if (cols > prevCols) {
     cellSize = Math.round(area.offsetHeight / cols);
-    // cols = Math.round(area.offsetHeight / cellSize);
-    // rows = Math.round(area.offsetHeight / cellSize);
   }
+
   for (let y = 0; y < cols; y++) {
     grid[y] = [];
     for (let x = 0; x < rows; x++) {
       grid[y][x] = false;
     }
   };
+
+  nextGrid = grid;
   drawField(grid);
-  // console.log(grid);
 };
 
 let playing = false;
@@ -66,7 +64,7 @@ const getNeighbors = (x, y, grid) => {
   if (nextY === grid.length) {
     nextY = 0;
   }
-
+  
   return [
     grid[prevY][prevX],
     grid[prevY][x],
@@ -86,15 +84,15 @@ const getDeadOrAlive = (x, y, grid) => {
 
   if (grid[y][x]) {
     if (numberOfAliveNeighbors < 2 || numberOfAliveNeighbors > 3) {
-      return false
+      return false;
     }
-    return true
+    return true;
   }
 
   if (numberOfAliveNeighbors === 3) {
-    return true
+    return true;
   }
-  return false
+  return false;
 };
 
 const drawField = grid => {
@@ -102,15 +100,14 @@ const drawField = grid => {
   for (let x = 0; x < cols; x++) {
     for (let y = 0; y < rows; y++) {
       if (grid.length !== 0 && grid[y][x]) {
-        context.fillStyle = 'red'
-        context.fillRect(x * cellSize, y * cellSize, cellSize, cellSize)
+        context.fillStyle = 'red';
+        context.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
       } else {
-        context.fillStyle = 'teal'
-        context.fillRect(x * cellSize, y * cellSize, cellSize, cellSize)
+        context.fillStyle = 'teal';
+        context.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
       }
     }
   }
-  //  console.log(grid);
 };
 
 let nextGrid = grid;
@@ -120,23 +117,23 @@ const step = () => {
   nextGrid = nextGrid.map((row, y) => row.map((_, x) => {
     currentState = grid[y][x];
     let nextState = getDeadOrAlive(x, y, nextGrid);
-    // console.log('nexState '+nextState + ' currentState '+ currentState);
     if (nextState !== currentState){
       gridChanged = true;
     }
     return nextState;
   }))
+
   if (gridChanged){
     drawField(nextGrid);
     gridChanged = false;
   } else {
-    console.log('игра остановилася');
-    // clearInterval(interval)
     clearInterval(interval);
+    clearInterval(timerInterval);
     playing=false;
+    console.log('Game over!');
+    document.querySelector('.messages').innerHTML = "Game over!";
+    document.getElementById("timer").innerHTML = '';
   }
-  
-
   grid = nextGrid;
 };
 
@@ -161,7 +158,8 @@ document.getElementById('pause').addEventListener('click', () => {
 });
 
 // button to clear field
-  document.getElementById('clear').addEventListener('click', () => {  
+document.getElementById('clear').addEventListener('click', () => {  
+  document.querySelector('.messages').innerHTML = "";
   playing = false;
   clearInterval(interval);
   clearInterval(timerInterval);
@@ -172,7 +170,36 @@ document.getElementById('pause').addEventListener('click', () => {
       grid[y][x] = false;
     }
   }
+  nextGrid = grid;
+  drawField(grid);
+});
 
+document.querySelector('#glider').addEventListener('click', () => {
+  clearInterval(timerInterval);
+  document.getElementById("timer").innerHTML = '';
+  for (let y = 0; y < cols; y++) {
+    for (let x = 0; x < rows; x++) {
+      grid[y][x] = false;
+    }
+  }
+  if (cols > 22) {
+    grid[20][20] = true;
+    grid[20][21] = true;
+    grid[20][22] = true;
+    grid[19][22] = true;
+    grid[18][21] = true;
+    document.querySelector('.messages').innerHTML = "";
+  } else if (cols <=22 && cols > 2 ) {
+    grid[0][1] = true;
+    grid[1][2] = true;
+    grid[2][2] = true;
+    grid[2][1] = true;
+    grid[2][0] = true;
+    document.querySelector('.messages').innerHTML = "";
+  } else {
+    document.querySelector('.messages').innerHTML = "Glider is not possible";
+  }
+  
   nextGrid = grid;
 
   drawField(grid);
@@ -180,6 +207,7 @@ document.getElementById('pause').addEventListener('click', () => {
 
 // button to make random field
 document.getElementById('random').addEventListener('click', () => {
+  document.querySelector('.messages').innerHTML = "";
   const todayInMilliseconds = Date.now();
   function timerRun () {
     const seconds = 'timer: ' + Math.floor((Date.now() - todayInMilliseconds) / 1000);
@@ -200,19 +228,10 @@ document.getElementById('random').addEventListener('click', () => {
 
 // button to draw one cell with mouse
 document.querySelector('.game__area').addEventListener('click', (event) => {
-  const x = Math.floor(event.offsetX / cellSize)
-  const y = Math.floor(event.offsetY / cellSize)
-  grid[y][x] = !grid[y][x]
+  const x = Math.floor(event.offsetX / cellSize);
+  const y = Math.floor(event.offsetY / cellSize);
+  grid[y][x] = !grid[y][x];
    
-  // if (canvas.getContext) {
-  //   const ctx = canvas.getContext("2d");
-  //   ctx.fillStyle = 'red';
-  //   ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
-  // }
   drawField(grid);
-  nextGrid = grid
+  nextGrid = grid;
 });
-
-// if (grid === nextGrid) {
-  
-// }
